@@ -235,18 +235,48 @@
                     }
                 };
 
+                // 📊 修改后的 initChart (平滑动画)
                 const initChart = () => {
                     const chartDom = document.getElementById('radar-chart');
                     if (chartDom) {
-                        echarts.getInstanceByDom(chartDom)?.dispose();
-                        const myChart = echarts.init(chartDom);
+                        // 1. 尝试获取已存在的实例
+                        let myChart = echarts.getInstanceByDom(chartDom);
+                        
+                        // 2. 如果不存在（第一次）才初始化
+                        if (!myChart) {
+                            myChart = echarts.init(chartDom);
+                        }
+
                         const score = currentSession.value?.ai_analysis?.score || 60;
-                        const dataValues = [Math.min(100, score + 10), Math.min(100, score + 20), score, Math.min(100, score - 10), Math.min(100, score + 5)];
+                        const dataValues = [
+                            Math.min(100, score + 10), Math.min(100, score + 20),
+                            score, Math.min(100, score - 10), Math.min(100, score + 5)
+                        ];
+
+                        // 3. 使用 setOption 更新数据，ECharts 会自动做过渡动画
                         myChart.setOption({
-                            radar: { indicator: [{name:'速度',max:100}, {name:'态度',max:100}, {name:'专业',max:100}, {name:'合规',max:100}, {name:'挽留',max:100}], radius: '65%', splitNumber: 4, axisName: { color: '#64748b', fontSize: 10 } },
-                            series: [{ type: 'radar', data: [{ value: dataValues, areaStyle: { color: 'rgba(239, 68, 68, 0.2)' }, lineStyle: { color: '#ef4444', width: 2 }, itemStyle: { color: '#ef4444' } }] }]
+                            radar: { 
+                                indicator: [{name:'速度',max:100}, {name:'态度',max:100}, {name:'专业',max:100}, {name:'合规',max:100}, {name:'挽留',max:100}], 
+                                radius: '65%', 
+                                splitNumber: 4, 
+                                axisName: { color: '#64748b', fontSize: 10 } 
+                            },
+                            series: [{ 
+                                type: 'radar', 
+                                data: [{ 
+                                    value: dataValues, 
+                                    areaStyle: { color: 'rgba(239, 68, 68, 0.2)' }, 
+                                    lineStyle: { color: '#ef4444', width: 2 }, 
+                                    itemStyle: { color: '#ef4444' } 
+                                }] 
+                            }]
                         });
-                        setTimeout(() => myChart.resize(), 100);
+                        
+                        // 只需要在第一次时绑定 resize，防止重复绑定
+                        if (!myChart._isResized) {
+                            window.addEventListener('resize', () => myChart.resize());
+                            myChart._isResized = true; 
+                        }
                     }
                 };
 
@@ -277,19 +307,34 @@
                     }
                 };
 
-                const loadData = async () => {
+                // 🔄 修改后的 loadData (支持静默刷新)
+                const loadData = async (isSilent = false) => {
                     if (!currentDate.value) return;
-                    loading.value = true;
+                    
+                    // 只有在非静默模式（手动切换日期/首次加载）时，才显示 Loading
+                    // 注意：setInterval 传过来的是 true，@change 传过来的是事件对象(不等于true)
+                    if (isSilent !== true) loading.value = true;
+                    
                     try {
                         const res = await fetch(`/api/sessions?date=${currentDate.value}`);
                         if (res.ok) {
                             const data = await res.json();
                             sessions.value = data;
                             isConnected.value = true;
-                            currentSession.value = null;
-                            if(data.length > 0 && window.innerWidth >= 768) currentSession.value = data[0];
+                            
+                            // 保持当前选中的会话高亮，而不是重置
+                            if (currentSession.value) {
+                                const found = data.find(s => s.id === currentSession.value.id);
+                                if (found) currentSession.value = found; // 更新引用，让右侧数据也刷新
+                            } else if(data.length > 0 && window.innerWidth >= 768) {
+                                currentSession.value = data[0];
+                            }
                         }
-                    } catch (e) { isConnected.value = false; } finally { loading.value = false; }
+                    } catch (e) {
+                        isConnected.value = false;
+                    } finally { 
+                        loading.value = false; 
+                    }
                 };
 
                 const handleReview = async (action) => {
@@ -331,7 +376,10 @@
 
                 onMounted(() => {
                     initApp();
-                    setInterval(() => { if (currentDate.value) loadData(); }, 5000);
+                    // 👇 修改这一行：传入 true，表示"这是静默刷新，别闪屏幕"
+                    setInterval(() => {
+                        if (currentDate.value) loadData(true); 
+                    }, 60000);
                 });
 
                 return {

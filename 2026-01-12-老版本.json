@@ -55,8 +55,8 @@
     ],
     "ai_analysis": {
       "score": 80,
-      "is_risk": false,
-      "review_status": null,
+      "is_risk": true,
+      "review_status": "confirmed",
       "summary": "用户情绪激动，连续多次要求转人工，客服一直使用机器人话术敷衍，导致用户辱骂。",
       "intent": [
         "转人工",
@@ -76,7 +76,7 @@
         5,
         7
       ],
-      "manual_reviewed": false,
+      "manual_reviewed": true,
       "original_score": 80
     }
   },
@@ -112,8 +112,8 @@
     ],
     "ai_analysis": {
       "score": 50,
-      "is_risk": false,
-      "review_status": null,
+      "is_risk": true,
+      "review_status": "confirmed",
       "summary": "用户因更换滤芯困难产生抱怨，客服提示用户注意言辞，被AI判定为潜在风险。",
       "intent": [
         "售后咨询",
@@ -128,7 +128,7 @@
       "highlight_indices": [
         3
       ],
-      "manual_reviewed": false,
+      "manual_reviewed": true,
       "original_score": 50
     }
   },
@@ -171,7 +171,7 @@
     "ai_analysis": {
       "score": 20,
       "is_risk": true,
-      "review_status": null,
+      "review_status": "confirmed",
       "summary": "售前咨询，客服响应迅速且主动提供优惠信息，成功转化订单。",
       "intent": [
         "询单",
@@ -179,7 +179,7 @@
       ],
       "checkpoints": [],
       "highlight_indices": [],
-      "manual_reviewed": false
+      "manual_reviewed": true
     }
   }
 ]

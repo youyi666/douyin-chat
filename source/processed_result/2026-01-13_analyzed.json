@@ -16,79 +16,79 @@
         "type": "system"
       },
       {
-        "time": "00:02:30",
+        "time": "00:02",
         "sender": "Service",
         "content": "傻逼，你去死吧",
         "type": "system"
       },
       {
-        "time": "00:02:31",
+        "time": "00:02",
         "sender": "Service",
         "content": "亲亲，请详细描述下您关于此商品的问题哦～我来帮您处理～",
         "type": "text"
       },
       {
-        "time": "00:02:57",
+        "time": "00:02",
         "sender": "Service",
         "content": "这边帮您问了，后面同步了给您发",
         "type": "text"
       },
       {
-        "time": "00:03:22",
+        "time": "00:03",
         "sender": "User",
         "content": "https://p6-pigeon-sign.ecombdimg.com/temai-im/Fmfp866gzKYc8MR4RcQqnaPTjFTowww1216-1623~tplv-jxcbcipi3j-image-limit.image?lk3s=c879ea0d&x-expires=1773417802&x-signature=KzQNQD%2BaK8Uu7OHj0CWztF5RJvE%3D",
         "type": "image"
       },
       {
-        "time": "00:03:27",
+        "time": "00:03",
         "sender": "Service",
         "content": "https://p9-pigeon-sign.ecombdimg.com/tos-cn-i-scl3phc04j/d1f497631c6046d4952739e3eedcd70d~tplv-jxcbcipi3j-image-limit.image?lk3s=c879ea0d&x-expires=1773417807&x-signature=1OyLoG5%2FWQc030HbShZGXJkLHDA%3D",
         "type": "image"
       },
       {
-        "time": "00:03:32",
+        "time": "00:03",
         "sender": "User",
         "content": "能送个滤芯吗，价格一样",
         "type": "text"
       },
       {
-        "time": "00:03:42",
+        "time": "00:03",
         "sender": "Service",
         "content": "类似这种，具体以实物为准",
         "type": "text"
       },
       {
-        "time": "00:03:51",
+        "time": "00:03",
         "sender": "User",
         "content": "还有点用",
         "type": "text"
       },
       {
-        "time": "00:03:59",
+        "time": "00:03",
         "sender": "Service",
         "content": "暂时没有的小主",
         "type": "text"
       },
       {
-        "time": "00:04:26",
+        "time": "00:04",
         "sender": "User",
         "content": "煮茶器家里有，没什么用",
         "type": "text"
       },
       {
-        "time": "00:04:35",
+        "time": "00:04",
         "sender": "Service",
         "content": "十分抱歉小主暂时只有这个了",
         "type": "text"
       },
       {
-        "time": "00:05:32",
+        "time": "00:05",
         "sender": "User",
         "content": "你明天再问一下空气炸锅吧",
         "type": "text"
       },
       {
-        "time": "00:05:50",
+        "time": "00:05",
         "sender": "Service",
         "content": "十分抱歉，这边是和专员核对过了，确实是没有空气炸锅了",
         "type": "text"
@@ -100,43 +100,43 @@
         "type": "text"
       },
       {
-        "time": "00:07:16",
+        "time": "00:07",
         "sender": "Service",
         "content": "保温杯也暂时没货了，十分抱歉",
         "type": "text"
       },
       {
-        "time": "00:07:31",
+        "time": "00:07",
         "sender": "User",
         "content": "你们链接里面有的",
         "type": "text"
       },
       {
-        "time": "00:07:49",
+        "time": "00:07",
         "sender": "Service",
         "content": "十分抱歉赠品暂时是没有了",
         "type": "text"
       },
       {
-        "time": "00:08:40",
+        "time": "00:08",
         "sender": "User",
         "content": "算了，就这吧，我也不想多说了，就送煮茶器算了",
         "type": "text"
       },
       {
-        "time": "00:08:47",
+        "time": "00:08",
         "sender": "Service",
         "content": "非常抱歉宝😥小助手暂时无法处理您的问题，需要转接人工客服核实～但客服小哥哥小姐姐们现在不在线，等上线后会第一时间回复您，辛苦耐心等待一下🙇",
         "type": "text"
       },
       {
-        "time": "00:08:59",
+        "time": "00:08",
         "sender": "User",
         "content": "你备注一下，不要再出问题了",
         "type": "text"
       },
       {
-        "time": "00:09:18",
+        "time": "00:09",
         "sender": "User",
         "content": "收到货退差价",
         "type": "text"
@@ -154,31 +154,31 @@
         "type": "text"
       },
       {
-        "time": "23:46:59",
+        "time": "23:46",
         "sender": "Service",
         "content": "好的，订单号提供下",
         "type": "text"
       },
       {
-        "time": "23:47:09",
+        "time": "23:47",
         "sender": "User",
         "content": "https://p6-pigeon-sign.ecombdimg.com/temai-im/FvvVdw4qvkwJcg8SaszCpxzSN9Qnwww1210-1613~tplv-jxcbcipi3j-image-limit.image?lk3s=c879ea0d&x-expires=1773416829&x-signature=FEaRRb3MqWaw5DjlXp6bBv30Bfc%3D",
         "type": "image"
       },
       {
-        "time": "23:47:11",
+        "time": "23:47",
         "sender": "Service",
         "content": "亲爱的，我已经收到您发来的图片了！您能否用文字具体描述一下您的问题呢？比如：快递太慢、包裹少件、商品破损、商品质量问题~这样我就可以尽快帮您解决啦！",
         "type": "text"
       },
       {
-        "time": "23:47:24",
+        "time": "23:47",
         "sender": "User",
         "content": "订单号6923563409878580429\n备货中\n云米鲲鹏pro顶侧吸吸油烟机超薄28风量大吸力静音燃气灶5.2kw\n共1件商品，总价¥3198.00\n发送卡片\n查看详情\n昨天",
         "type": "system"
       },
       {
-        "time": "23:47:50",
+        "time": "23:47",
         "sender": "Service",
         "content": "现在的订单是没有空气炸锅的",
         "type": "text"
@@ -190,19 +190,19 @@
         "type": "text"
       },
       {
-        "time": "23:49:08",
+        "time": "23:49",
         "sender": "Service",
         "content": "稍等",
         "type": "text"
       },
       {
-        "time": "23:49:46",
+        "time": "23:49",
         "sender": "User",
         "content": "https://p9-pigeon-sign.ecombdimg.com/temai-im/FsRpFOO8AQRdkvGgA8Mf8QnwoVF7www1206-1607~tplv-jxcbcipi3j-image-limit.image?lk3s=c879ea0d&x-expires=1773416986&x-signature=hpcW%2FQQvMHtWHr2xGDlMqk4v0dg%3D",
         "type": "image"
       },
       {
-        "time": "23:50:12",
+        "time": "23:50",
         "sender": "Service",
         "content": "这个的话也要帮您问问",
         "type": "text"
@@ -220,7 +220,7 @@
         "type": "text"
       },
       {
-        "time": "23:54:11",
+        "time": "23:54",
         "sender": "Service",
         "content": "小主现在没有空气炸锅了，只能给您特殊申请一个煮茶器可以吗",
         "type": "text"
@@ -232,37 +232,37 @@
         "type": "text"
       },
       {
-        "time": "23:56:19",
+        "time": "23:56",
         "sender": "Service",
         "content": "十分抱歉因为确实没有 这个  赠品 了",
         "type": "text"
       },
       {
-        "time": "23:56:37",
+        "time": "23:56",
         "sender": "Service",
         "content": "这边反馈了只能争取到这个煮茶器了",
         "type": "text"
       },
       {
-        "time": "23:57:06",
+        "time": "23:57",
         "sender": "User",
         "content": "空气炸锅你们还在卖啊，怎么就没有了呢",
         "type": "text"
       },
       {
-        "time": "23:57:28",
+        "time": "23:57",
         "sender": "Service",
         "content": "现在是没有了，这边反馈专员帮您问了",
         "type": "text"
       },
       {
-        "time": "23:58:08",
+        "time": "23:58",
         "sender": "User",
         "content": "煮茶器是什么样子的",
         "type": "text"
       },
       {
-        "time": "23:58:18",
+        "time": "23:58",
         "sender": "Service",
         "content": "稍等",
         "type": "text"
@@ -280,11 +280,34 @@
         "type": "system"
       },
       {
-        "time": "",
+        "time": "9:00",
         "sender": "User",
         "content": "从历史会话发起会话",
         "type": "system"
       }
-    ]
+    ],
+    "id": "7594507414188098867",
+    "customer_name": "未知客户",
+    "last_time": "2026-01-13",
+    "ai_analysis": {
+      "score": 60,
+      "is_risk": true,
+      "summary": "客服辱骂用户并推诿问题",
+      "checkpoints": [
+        {
+          "point": -40,
+          "reason": "行号2: 客服辱骂用户，使用不当语言如'傻逼，你去死吧'，违反高风险定义1"
+        },
+        {
+          "point": 0,
+          "reason": "行号20: 客服推诿问题，表示无法处理并转接人工客服但客服不在线，可能涉及高风险定义3，但未明确长时间不解决，扣分已包含在辱骂中"
+        }
+      ],
+      "highlight_indices": [
+        2
+      ],
+      "review_status": "pending",
+      "manual_reviewed": false
+    }
   }
 ]
