@@ -7,7 +7,7 @@ from openai import OpenAI
 
 # ================= 配置区域 =================
 # 输入文件夹路径
-SOURCE_FOLDER = r"F:\douyin-chat\data"
+SOURCE_FOLDER = "data"
 
 # 输出文件夹路径
 OUTPUT_FOLDER = os.path.join("source", "processed_result")
