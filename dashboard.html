@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>智能客服质检看板 (最终完整版)</title>
+    <title>智能客服质检看板 (升级版)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -15,10 +15,13 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        .chat-bubble { max-width: 85%; padding: 12px 14px; border-radius: 12px; position: relative; font-size: 14px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+        /* Modified: 减小内边距，提高密度 */
+        .chat-bubble { max-width: 88%; padding: 8px 10px; border-radius: 8px; position: relative; font-size: 13px; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
         .bubble-left { background-color: #ffffff; border: 1px solid #e2e8f0; border-top-left-radius: 2px; color: #1e293b; }
         .bubble-right { background-color: #eff6ff; border: 1px solid #bfdbfe; border-top-right-radius: 2px; color: #1e40af; }
-        .bubble-system { background-color: #f8fafc; color: #94a3b8; font-size: 12px; text-align: center; margin: 12px auto; display: inline-block; padding: 4px 12px; border-radius: 99px; border: 1px solid #f1f5f9; }
+        
+        /* 隐藏系统消息样式，虽然逻辑上过滤了，保留CSS以防万一 */
+        .bubble-system { display: none; }
         
         .violation-highlight { animation: flashRed 2s infinite; border: 2px solid #ef4444; background-color: #fef2f2; }
         @keyframes flashRed { 
@@ -26,38 +29,34 @@
             50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); border-color: #f87171; } 
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); border-color: #ef4444; } 
         }
+        
+        .msg-focused .chat-bubble {
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
+            border-color: #3b82f6;
+            transition: all 0.3s ease;
+        }
     </style>
 </head>
 <body class="bg-slate-50 h-screen overflow-hidden flex flex-col text-slate-800">
 
     <div id="app" class="h-full flex flex-col">
         
-        <header class="bg-white border-b border-slate-200 h-14 flex items-center px-4 md:px-6 justify-between shrink-0 z-30 shadow-sm relative">
+        <header class="bg-white border-b border-slate-200 h-12 flex items-center px-4 md:px-6 justify-between shrink-0 z-30 shadow-sm relative">
             <div class="flex items-center gap-3">
                 <button v-if="mobileView !== 'list'" @click="goBack" class="md:hidden w-8 h-8 flex items-center justify-center -ml-2 text-slate-600 active:bg-slate-100 rounded-full">
                     <i class="ri-arrow-left-line text-xl"></i>
                 </button>
 
-                <i class="ri-shield-check-fill text-blue-600 text-2xl"></i>
-                <h1 class="font-bold text-lg tracking-tight truncate max-w-[150px] md:max-w-none">
-                    质检工作台 <span class="hidden md:inline text-xs font-normal text-slate-400 ml-2 bg-slate-100 px-2 py-0.5 rounded">Live Data</span>
+                <i class="ri-shield-check-fill text-blue-600 text-xl"></i>
+                <h1 class="font-bold text-base tracking-tight truncate max-w-[150px] md:max-w-none">
+                    质检工作台 <span class="hidden md:inline text-[10px] font-normal text-slate-400 ml-2 bg-slate-100 px-1.5 py-0.5 rounded">Live Data</span>
                 </h1>
             </div>
             
             <div class="flex gap-3 md:gap-6 text-sm text-slate-500 items-center">
-                <div class="relative group">
-                    <select v-model="currentDate" @change="loadData" class="appearance-none bg-slate-100 border border-slate-200 text-slate-700 font-bold py-1.5 pl-3 pr-8 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-xs md:text-sm">
-                        <option v-for="date in availableDates" :key="date" :value="date">{{ date }}</option>
-                        <option v-if="availableDates.length === 0" disabled>无数据</option>
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
-                        <i class="ri-calendar-line"></i>
-                    </div>
-                </div>
-
                 <div @click="triggerSecret" class="flex items-center gap-1.5 select-none cursor-pointer active:opacity-50 transition-opacity" :class="isConnected ? 'text-green-600' : 'text-red-500'">
-                    <div class="w-2 h-2 rounded-full" :class="isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'"></div>
-                    <span class="hidden md:inline font-medium text-xs">{{ isConnected ? '后端已连接' : '断开' }}</span>
+                    <div class="w-1.5 h-1.5 rounded-full" :class="isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'"></div>
+                    <span class="hidden md:inline font-medium text-xs">{{ isConnected ? '已连接' : '断开' }}</span>
                     <span v-if="!showAdminEntry" class="w-1 h-1 bg-slate-300 rounded-full ml-1 opacity-50"></span>
                 </div>
 
@@ -72,28 +71,43 @@
             
             <aside class="bg-white border-r border-slate-200 flex flex-col shrink-0 z-20 w-full md:w-80 absolute inset-0 md:static transition-transform duration-300 ease-in-out"
                    :class="{'translate-x-0': mobileView === 'list', '-translate-x-full md:translate-x-0': mobileView !== 'list'}">
-                <div class="p-4 border-b border-slate-100 bg-white">
+                
+                <div class="p-3 border-b border-slate-100 bg-white space-y-2">
+                     <div class="relative">
+                        <i class="ri-calendar-line absolute left-3 top-2 text-slate-400"></i>
+                        <input type="date" v-model="currentDate" @change="loadData" class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all font-mono text-slate-600">
+                    </div>
+
                     <div class="relative">
-                        <i class="ri-search-line absolute left-3 top-2.5 text-slate-400"></i>
-                        <input type="text" placeholder="搜索 ID..." class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all">
+                        <i class="ri-search-line absolute left-3 top-2 text-slate-400"></i>
+                        <input type="text" v-model="searchQuery" placeholder="搜索 ID..." class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all">
+                    </div>
+
+                    <div class="flex items-center justify-between bg-slate-50 p-2 rounded-lg border border-slate-100">
+                        <span class="text-xs font-bold text-slate-600 flex items-center gap-1"><i class="ri-filter-3-line"></i> 只看高风险</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" v-model="onlyShowRisk" class="sr-only peer">
+                            <div class="w-8 h-4 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-red-500"></div>
+                        </label>
                     </div>
                 </div>
+
                 <div class="flex-1 overflow-y-auto no-scrollbar">
                     <div v-if="loading" class="p-8 text-center text-slate-400 text-sm"><i class="ri-loader-4-line animate-spin text-2xl mb-2 block"></i> 正在连接...</div>
-                    <div v-else-if="sessions.length === 0" class="p-8 text-center text-slate-400 text-sm">暂无数据</div>
-                    <div v-for="session in sessions" :key="session.id" @click="selectSession(session)" 
-                         class="group relative p-4 border-b border-slate-50 cursor-pointer active:bg-blue-50 hover:bg-slate-50 transition-all"
+                    <div v-else-if="filteredSessions.length === 0" class="p-8 text-center text-slate-400 text-sm">暂无符合条件的数据</div>
+                    <div v-for="session in filteredSessions" :key="session.id" @click="selectSession(session)" 
+                         class="group relative p-3 border-b border-slate-50 cursor-pointer active:bg-blue-50 hover:bg-slate-50 transition-all"
                          :class="currentSession && currentSession.id === session.id ? 'bg-blue-50/60 border-l-4 border-l-blue-500' : 'border-l-4 border-l-transparent'">
-                        <div class="flex justify-between items-start mb-1.5">
+                        <div class="flex justify-between items-start mb-1">
                             <span class="font-bold text-slate-700 truncate w-32 text-sm">{{ session.customer_name }}</span>
-                            <span class="text-xs text-slate-400 font-mono">{{ session.last_time.split(' ')[1] || session.last_time }}</span>
+                            <span class="text-[10px] text-slate-400 font-mono">{{ session.last_time.split(' ')[1] || session.last_time }}</span>
                         </div>
-                        <div class="flex gap-1.5 mb-2.5">
+                        <div class="flex gap-1.5 mb-2">
                             <span v-if="session.ai_analysis.is_risk" class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-600 border border-red-200"><i class="ri-alert-fill mr-1"></i>高风险</span>
                             <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">{{ session.ai_analysis.score }}分</span>
                             <span v-if="session.ai_analysis.review_status === 'pending'" class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-yellow-100 text-yellow-700 border border-yellow-200">待审</span>
                         </div>
-                        <p class="text-xs text-slate-500 line-clamp-1 opacity-80">{{ session.ai_analysis.summary }}</p>
+                        <p class="text-[10px] text-slate-500 line-clamp-1 opacity-80">{{ session.ai_analysis.summary }}</p>
                     </div>
                 </div>
             </aside>
@@ -101,88 +115,110 @@
             <section class="bg-[#f0f2f5] flex flex-col min-w-0 z-10 w-full md:flex-1 absolute inset-0 md:static transition-transform duration-300 ease-in-out"
                      :class="{'translate-x-0': mobileView === 'chat', 'translate-x-full md:translate-x-0': mobileView !== 'chat'}"
                      v-if="currentSession">
-                <div class="h-14 bg-white border-b border-slate-200 flex items-center px-4 md:px-6 justify-between shadow-sm z-10 shrink-0">
+                
+                <div class="h-12 bg-white border-b border-slate-200 flex items-center px-4 md:px-6 justify-between shadow-sm z-10 shrink-0">
                     <div class="flex items-center gap-2 overflow-hidden">
-                        <span class="font-bold text-slate-800 truncate">{{ currentSession.customer_name }}</span>
-                        <span class="px-2 py-0.5 bg-slate-100 text-slate-500 text-xs rounded font-mono hidden md:inline">{{ currentSession.id }}</span>
+                        <span class="font-bold text-slate-800 truncate text-sm">{{ currentSession.customer_name }}</span>
+                        <span class="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] rounded font-mono hidden md:inline">{{ currentSession.id }}</span>
                     </div>
-                    <button @click="mobileView = 'detail'" class="md:hidden text-blue-600 text-sm font-medium flex items-center px-2 py-1 rounded active:bg-blue-50">分析报告 <i class="ri-file-list-3-line ml-1"></i></button>
-                    <div class="hidden md:flex gap-2">
-                        <span v-for="tag in currentSession.ai_analysis.intent" class="px-2 py-1 bg-blue-50 text-blue-600 text-xs font-medium rounded border border-blue-100">#{{ tag }}</span>
+                    <button @click="mobileView = 'detail'" class="md:hidden text-blue-600 text-xs font-bold flex items-center px-2 py-1 rounded active:bg-blue-50">分析报告 <i class="ri-file-list-3-line ml-1"></i></button>
+                    <div class="hidden md:flex gap-2 items-center">
+                         <label class="flex items-center gap-2 cursor-pointer bg-orange-50 px-2 py-1 rounded-full border border-orange-100 text-orange-600 mr-2 hover:bg-orange-100 transition">
+                            <input type="checkbox" v-model="onlyShowViolations" class="accent-orange-500 w-3 h-3">
+                            <span class="text-[10px] font-bold">只看违规</span>
+                        </label>
+                        <span v-for="tag in currentSession.ai_analysis.intent" class="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-medium rounded border border-blue-100">#{{ tag }}</span>
                     </div>
                 </div>
-                <div class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 no-scrollbar" id="chat-container">
-                    <div v-for="(msg, index) in currentSession.messages" :key="index" class="w-full">
-                        <div v-if="msg.sender === 'System' || msg.type === 'system'" class="text-center"><span class="bubble-system shadow-sm">{{ msg.content }}</span></div>
-                        <div v-else :class="['flex gap-3', msg.sender === 'Service' ? 'flex-row-reverse' : '']">
-                            <div class="w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-white text-xs font-bold shadow-sm"
+
+                <div class="flex-1 overflow-y-auto p-2 md:p-4 space-y-3 no-scrollbar relative" id="chat-container">
+                    
+                    <div v-if="isLongChat && !chatExpanded && !onlyShowViolations" class="sticky top-0 z-20 flex justify-center pb-2">
+                         <button @click="chatExpanded = true" class="bg-white/90 backdrop-blur border border-slate-200 shadow-sm text-blue-600 px-3 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 hover:bg-slate-50 transition">
+                            <i class="ri-expand-up-down-line"></i> 展开完整对话 ({{ currentSession.messages.length }}条)
+                        </button>
+                    </div>
+
+                    <div v-for="(msg, index) in displayMessages" :key="index" :id="'msg-' + msg.originalIndex" class="w-full transition-all duration-300" :class="focusedMsgIndex === msg.originalIndex ? 'msg-focused' : ''">
+                        <div :class="['flex gap-2', msg.sender === 'Service' ? 'flex-row-reverse' : '']">
+                            <div class="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-white text-[10px] font-bold shadow-sm"
                                  :class="msg.sender === 'Service' ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 'bg-gradient-to-br from-orange-400 to-orange-500'">{{ msg.sender === 'Service' ? '客' : '用' }}</div>
-                            <div class="flex flex-col max-w-[85%] md:max-w-[75%]">
-                                <div class="text-[10px] text-slate-400 mb-1 px-1" :class="msg.sender === 'Service' ? 'text-right' : ''">{{ msg.time }}</div>
-                                <div :class="['chat-bubble shadow-sm', msg.sender === 'Service' ? 'bubble-right' : 'bubble-left', currentSession.ai_analysis.highlight_indices.includes(index) ? 'violation-highlight' : 'border-transparent']">
-                                    <div v-if="isProductCard(msg.content)" class="flex gap-3 bg-white/50 p-1 rounded-lg">
-                                        <div class="w-12 h-12 md:w-16 md:h-16 bg-slate-200 rounded-md shrink-0 overflow-hidden flex items-center justify-center"><i class="ri-shopping-bag-3-fill text-slate-400 text-xl md:text-2xl"></i></div>
+                            <div class="flex flex-col max-w-[88%] md:max-w-[80%]">
+                                <div class="text-[9px] text-slate-400 mb-0.5 px-1 leading-none" :class="msg.sender === 'Service' ? 'text-right' : ''">{{ msg.time }}</div>
+                                <div :class="['chat-bubble shadow-sm', msg.sender === 'Service' ? 'bubble-right' : 'bubble-left', currentSession.ai_analysis.highlight_indices.includes(msg.originalIndex) ? 'violation-highlight' : 'border-transparent']">
+                                    <div v-if="isProductCard(msg.content)" class="flex gap-2 bg-white/50 p-1 rounded-lg">
+                                        <div class="w-10 h-10 md:w-12 md:h-12 bg-slate-200 rounded-md shrink-0 overflow-hidden flex items-center justify-center"><i class="ri-shopping-bag-3-fill text-slate-400 text-lg"></i></div>
                                         <div class="flex-1 min-w-0 flex flex-col justify-center">
-                                            <div class="text-xs font-bold text-slate-700 line-clamp-2 leading-tight mb-1">{{ getProductName(msg.content) }}</div>
-                                            <div class="text-red-500 font-bold text-sm">¥{{ getProductPrice(msg.content) }}</div>
+                                            <div class="text-[10px] font-bold text-slate-700 line-clamp-2 leading-tight mb-0.5">{{ getProductName(msg.content) }}</div>
+                                            <div class="text-red-500 font-bold text-xs">¥{{ getProductPrice(msg.content) }}</div>
                                         </div>
                                     </div>
                                     <span v-else>{{ msg.content }}</span>
                                 </div>
-                                <div v-if="currentSession.ai_analysis.highlight_indices.includes(index)" class="text-xs text-red-500 mt-1.5 font-bold flex items-center gap-1" :class="msg.sender === 'Service' ? 'justify-end' : ''"><i class="ri-error-warning-fill"></i> 违规点</div>
+                                <div v-if="currentSession.ai_analysis.highlight_indices.includes(msg.originalIndex)" class="text-[10px] text-red-500 mt-1 font-bold flex items-center gap-1" :class="msg.sender === 'Service' ? 'justify-end' : ''"><i class="ri-error-warning-fill"></i> 违规点</div>
                             </div>
                         </div>
                     </div>
+                    
                 </div>
             </section>
 
             <aside class="bg-white border-l border-slate-200 flex flex-col shrink-0 z-30 shadow-xl w-full md:w-96 absolute inset-0 md:static transition-transform duration-300 ease-in-out"
                    :class="{'translate-x-0': mobileView === 'detail', 'translate-x-full md:translate-x-0': mobileView !== 'detail'}"
                    v-if="currentSession">
-                <div class="md:hidden h-14 border-b border-slate-100 flex items-center px-4 gap-3 bg-slate-50">
+                <div class="md:hidden h-12 border-b border-slate-100 flex items-center px-4 gap-3 bg-slate-50">
                     <button @click="mobileView = 'chat'" class="w-8 h-8 flex items-center justify-center bg-white border border-slate-200 rounded-full shadow-sm"><i class="ri-arrow-left-line text-slate-600"></i></button>
                     <span class="font-bold text-slate-700">AI 诊断详情</span>
                 </div>
-                <div class="p-6 border-b border-slate-100 bg-gradient-to-b from-white to-slate-50/50">
-                    <div class="text-center mb-4">
-                        <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">AI 综合评分</div>
-                        <div class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500 drop-shadow-sm">{{ currentSession.ai_analysis.score }}</div>
+                <div class="p-4 border-b border-slate-100 bg-gradient-to-b from-white to-slate-50/50">
+                    <div class="text-center mb-2">
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">AI 综合评分</div>
+                        <div class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500 drop-shadow-sm">{{ currentSession.ai_analysis.score }}</div>
                     </div>
-                    <div id="radar-chart" class="w-full h-48"></div>
+                    <div id="radar-chart" class="w-full h-40"></div>
                 </div>
-                <div class="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar">
+                <div class="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar">
                     <div>
-                        <h3 class="font-bold text-slate-800 text-sm mb-3 flex items-center"><i class="ri-stethoscope-line text-blue-500 mr-2 text-lg"></i>扣分细则</h3>
-                        <div class="space-y-3">
-                            <div v-for="point in currentSession.ai_analysis.checkpoints" :key="point.reason" class="bg-red-50 p-3 rounded-lg border border-red-100 flex gap-3 items-start">
-                                <div class="bg-white text-red-600 text-xs font-bold px-1.5 py-0.5 rounded border border-red-100 shadow-sm shrink-0 mt-0.5">{{ point.point }}</div>
-                                <p class="text-xs text-slate-700 leading-relaxed">{{ point.reason }}</p>
+                        <h3 class="font-bold text-slate-800 text-xs mb-2 flex items-center justify-between">
+                            <span><i class="ri-stethoscope-line text-blue-500 mr-2 text-sm"></i>扣分细则</span>
+                            <span class="text-[10px] font-normal text-slate-400">点击可定位</span>
+                        </h3>
+                        <div class="space-y-2">
+                            <div v-for="(point, idx) in currentSession.ai_analysis.checkpoints" :key="idx" 
+                                 @click="scrollToMessage(point.index)"
+                                 class="bg-red-50 p-2.5 rounded-lg border border-red-100 flex gap-2 items-start cursor-pointer hover:bg-red-100 transition-colors group">
+                                <div class="bg-white text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded border border-red-100 shadow-sm shrink-0 mt-0.5">{{ point.point }}</div>
+                                <div class="flex-1">
+                                    <p class="text-xs text-slate-700 leading-relaxed font-medium">{{ point.reason }}</p>
+                                    <p class="text-[10px] text-slate-400 mt-1 truncate group-hover:text-red-400 transition-colors">"{{ point.text }}"</p>
+                                </div>
+                                <i class="ri-focus-3-line text-red-300 opacity-0 group-hover:opacity-100 transition-opacity mt-1"></i>
                             </div>
                             <div v-if="!currentSession.ai_analysis.checkpoints || currentSession.ai_analysis.checkpoints.length === 0" class="text-xs text-slate-400 italic text-center py-4">🎉 完美！无扣分。</div>
                         </div>
                     </div>
                 </div>
-                <div class="p-4 bg-slate-50 mt-auto border-t border-slate-200 pb-8 md:pb-4">
-                    <div v-if="currentSession.ai_analysis.review_status" class="mb-3 text-xs text-center font-bold px-3 py-2 rounded bg-slate-200 text-slate-600">
+                <div class="p-3 bg-slate-50 mt-auto border-t border-slate-200 pb-8 md:pb-3">
+                    <div v-if="currentSession.ai_analysis.review_status" class="mb-2 text-[10px] text-center font-bold px-2 py-1.5 rounded bg-slate-200 text-slate-600">
                         当前状态：{{ currentSession.ai_analysis.review_status === 'pending' ? '等待复核' : currentSession.ai_analysis.review_status === 'approved' ? '已批准(满分)' : currentSession.ai_analysis.review_status === 'rejected' ? '已驳回' : '已确认违规' }}
                     </div>
-                    <div class="flex gap-3">
+                    <div class="flex gap-2">
                         <template v-if="!isAdmin">
                             <template v-if="!currentSession.ai_analysis.review_status">
-                                <button @click="handleReview('submit_appeal')" class="flex-1 bg-white border border-slate-300 text-slate-700 py-3 rounded-lg hover:bg-slate-50 text-sm font-medium">申诉</button>
-                                <button @click="handleReview('confirm_risk')" class="flex-1 bg-red-600 text-white border border-red-600 py-3 rounded-lg hover:bg-red-700 text-sm font-medium shadow-md">确认违规</button>
+                                <button @click="handleReview('submit_appeal')" class="flex-1 bg-white border border-slate-300 text-slate-700 py-2 rounded-lg hover:bg-slate-50 text-xs font-medium">申诉</button>
+                                <button @click="handleReview('confirm_risk')" class="flex-1 bg-red-600 text-white border border-red-600 py-2 rounded-lg hover:bg-red-700 text-xs font-medium shadow-md">确认违规</button>
                             </template>
-                            <button v-else disabled class="w-full bg-slate-200 text-slate-400 py-3 rounded-lg cursor-not-allowed text-sm font-medium border border-slate-300">流程已结束</button>
+                            <button v-else disabled class="w-full bg-slate-200 text-slate-400 py-2 rounded-lg cursor-not-allowed text-xs font-medium border border-slate-300">流程已结束</button>
                         </template>
                         <template v-else>
                             <template v-if="currentSession.ai_analysis.review_status === 'pending'">
-                                <button @click="handleReview('admin_reject')" class="flex-1 bg-white text-red-600 border border-red-200 py-3 rounded-lg hover:bg-red-50 text-sm font-medium">驳回</button>
-                                <button @click="handleReview('admin_approve')" class="flex-1 bg-green-600 text-white border border-green-600 py-3 rounded-lg hover:bg-green-700 text-sm font-medium shadow-md">批准</button>
+                                <button @click="handleReview('admin_reject')" class="flex-1 bg-white text-red-600 border border-red-200 py-2 rounded-lg hover:bg-red-50 text-xs font-medium">驳回</button>
+                                <button @click="handleReview('admin_approve')" class="flex-1 bg-green-600 text-white border border-green-600 py-2 rounded-lg hover:bg-green-700 text-xs font-medium shadow-md">批准</button>
                             </template>
                             <template v-else-if="currentSession.ai_analysis.review_status">
-                                <button @click="handleReview('admin_reset')" class="w-full text-blue-600 border border-blue-200 bg-blue-50 py-3 rounded-lg text-sm font-bold hover:bg-blue-100">↺ 撤销重置状态</button>
+                                <button @click="handleReview('admin_reset')" class="w-full text-blue-600 border border-blue-200 bg-blue-50 py-2 rounded-lg text-xs font-bold hover:bg-blue-100">↺ 撤销重置状态</button>
                             </template>
-                            <div v-else class="w-full text-center text-xs text-slate-400 py-3 bg-slate-50 rounded-lg border border-slate-200 border-dashed">无待办任务</div>
+                            <div v-else class="w-full text-center text-[10px] text-slate-400 py-2 bg-slate-50 rounded-lg border border-slate-200 border-dashed">无待办任务</div>
                         </template>
                     </div>
                 </div>
@@ -191,7 +227,7 @@
     </div>
 
     <script>
-        const { createApp, ref, onMounted, watch, nextTick } = Vue;
+        const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
 
         createApp({
             setup() {
@@ -202,8 +238,14 @@
                 const loading = ref(true);
                 const isConnected = ref(false);
                 const mobileView = ref('list');
-                const currentDate = ref(''); 
-                const availableDates = ref([]); 
+                const currentDate = ref(new Date().toISOString().split('T')[0]); 
+                
+                // Filters & UI State
+                const searchQuery = ref('');
+                const onlyShowRisk = ref(false);
+                const onlyShowViolations = ref(false);
+                const chatExpanded = ref(false);
+                const focusedMsgIndex = ref(-1);
                 
                 // 暗门变量
                 const showAdminEntry = ref(false); 
@@ -218,7 +260,69 @@
                 const checkScreen = () => { if (window.innerWidth >= 768) { /* Desktop */ } };
                 window.addEventListener('resize', checkScreen);
 
-                const selectSession = (session) => { currentSession.value = session; mobileView.value = 'chat'; };
+                // Computed Properties
+                const filteredSessions = computed(() => {
+                    return sessions.value.filter(s => {
+                        const matchId = s.id.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
+                                        s.customer_name.toLowerCase().includes(searchQuery.value.toLowerCase());
+                        const matchRisk = onlyShowRisk.value ? s.ai_analysis.is_risk : true;
+                        return matchId && matchRisk;
+                    });
+                });
+
+                const isLongChat = computed(() => {
+                    // 如果有高风险点，认为需要折叠逻辑
+                    return currentSession.value && currentSession.value.messages.length > 8;
+                });
+
+                const displayMessages = computed(() => {
+                    if (!currentSession.value) return [];
+                    
+                    // 1. 映射原始索引
+                    let msgs = currentSession.value.messages.map((m, idx) => ({...m, originalIndex: idx}));
+                    
+                    // Modified: 任务1 - 强制过滤系统消息 (同时 type check 和 sender check)
+                    msgs = msgs.filter(m => m.sender !== 'System' && m.type !== 'system');
+
+                    // 2. 处理只看违规
+                    if (onlyShowViolations.value) {
+                        const indices = currentSession.value.ai_analysis.highlight_indices || [];
+                        return msgs.filter(m => indices.includes(m.originalIndex));
+                    }
+                    
+                    // Modified: 任务4 - 智能折叠逻辑 (显示违规点上下文)
+                    if (isLongChat.value && !chatExpanded.value) {
+                         const indices = currentSession.value.ai_analysis.highlight_indices || [];
+                         
+                         // 如果有违规点，逻辑是：显示 [违规点-1, 违规点, 违规点+1]
+                         if (indices.length > 0) {
+                             const contextIndices = new Set();
+                             indices.forEach(idx => {
+                                 contextIndices.add(idx - 1);
+                                 contextIndices.add(idx);
+                                 contextIndices.add(idx + 1);
+                             });
+                             // 始终保留最后一条消息，防止看起来像断了
+                             contextIndices.add(currentSession.value.messages.length - 1);
+                             
+                             return msgs.filter(m => contextIndices.has(m.originalIndex));
+                         } else {
+                             // 如果无违规，但对话长，显示前3后3
+                             return msgs.filter((m, idx) => idx < 3 || idx > msgs.length - 4);
+                         }
+                    }
+                    return msgs;
+                });
+
+                // Methods
+                const selectSession = (session) => { 
+                    currentSession.value = session; 
+                    mobileView.value = 'chat'; 
+                    chatExpanded.value = false; 
+                    onlyShowViolations.value = false; 
+                    focusedMsgIndex.value = -1;
+                };
+
                 const goBack = () => {
                     if (mobileView.value === 'detail') mobileView.value = 'chat';
                     else if (mobileView.value === 'chat') mobileView.value = 'list';
@@ -235,17 +339,11 @@
                     }
                 };
 
-                // 📊 修改后的 initChart (平滑动画)
                 const initChart = () => {
                     const chartDom = document.getElementById('radar-chart');
                     if (chartDom) {
-                        // 1. 尝试获取已存在的实例
                         let myChart = echarts.getInstanceByDom(chartDom);
-                        
-                        // 2. 如果不存在（第一次）才初始化
-                        if (!myChart) {
-                            myChart = echarts.init(chartDom);
-                        }
+                        if (!myChart) myChart = echarts.init(chartDom);
 
                         const score = currentSession.value?.ai_analysis?.score || 60;
                         const dataValues = [
@@ -253,7 +351,6 @@
                             score, Math.min(100, score - 10), Math.min(100, score + 5)
                         ];
 
-                        // 3. 使用 setOption 更新数据，ECharts 会自动做过渡动画
                         myChart.setOption({
                             radar: { 
                                 indicator: [{name:'速度',max:100}, {name:'态度',max:100}, {name:'专业',max:100}, {name:'合规',max:100}, {name:'挽留',max:100}], 
@@ -272,7 +369,6 @@
                             }]
                         });
                         
-                        // 只需要在第一次时绑定 resize，防止重复绑定
                         if (!myChart._isResized) {
                             window.addEventListener('resize', () => myChart.resize());
                             myChart._isResized = true; 
@@ -286,20 +382,36 @@
                         if (container) container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
                     });
                 };
+                
+                // Modified: 任务3 - 修复定位功能
+                const scrollToMessage = (originalIndex) => {
+                    // 1. 强制展开所有对话，确保元素存在于 DOM 中
+                    chatExpanded.value = true;
+                    // 2. 取消只看违规过滤器，确保上下文完整
+                    onlyShowViolations.value = false;
+                    
+                    // 3. 使用 nextTick 等待 Vue 渲染 DOM
+                    nextTick(() => {
+                        // 稍微延迟一点，确保渲染完成 (针对长列表)
+                        setTimeout(() => {
+                            const el = document.getElementById('msg-' + originalIndex);
+                            if (el) {
+                                // 使用 scrollIntoView 
+                                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                focusedMsgIndex.value = originalIndex;
+                                setTimeout(() => { focusedMsgIndex.value = -1; }, 2500); // 高亮持续时间稍长一点
+                            } else {
+                                console.warn("Cannot find message element:", originalIndex);
+                            }
+                        }, 50);
+                    });
+                };
 
                 // 初始化逻辑
                 const initApp = async () => {
                     try {
-                        const res = await fetch('/api/meta');
-                        if (res.ok) {
-                            const data = await res.json();
-                            availableDates.value = data.dates;
-                            if (availableDates.value.length > 0) {
-                                currentDate.value = availableDates.value[0];
-                                await loadData();
-                            }
-                            isConnected.value = true;
-                        }
+                        await loadData();
+                        isConnected.value = true;
                     } catch (e) {
                         console.error(e);
                         isConnected.value = false;
@@ -307,12 +419,8 @@
                     }
                 };
 
-                // 🔄 修改后的 loadData (支持静默刷新)
                 const loadData = async (isSilent = false) => {
                     if (!currentDate.value) return;
-                    
-                    // 只有在非静默模式（手动切换日期/首次加载）时，才显示 Loading
-                    // 注意：setInterval 传过来的是 true，@change 传过来的是事件对象(不等于true)
                     if (isSilent !== true) loading.value = true;
                     
                     try {
@@ -322,10 +430,9 @@
                             sessions.value = data;
                             isConnected.value = true;
                             
-                            // 保持当前选中的会话高亮，而不是重置
                             if (currentSession.value) {
                                 const found = data.find(s => s.id === currentSession.value.id);
-                                if (found) currentSession.value = found; // 更新引用，让右侧数据也刷新
+                                if (found) currentSession.value = found;
                             } else if(data.length > 0 && window.innerWidth >= 768) {
                                 currentSession.value = data[0];
                             }
@@ -340,35 +447,11 @@
                 const handleReview = async (action) => {
                     if(!currentSession.value) return;
                     const analysis = currentSession.value.ai_analysis;
-                    const originalStatus = analysis.review_status;
-
                     if (action === 'submit_appeal') analysis.review_status = 'pending';
                     else if (action === 'confirm_risk') analysis.review_status = 'confirmed';
-                    else if (action === 'admin_approve') {
-                         if (analysis.original_score === undefined) analysis.original_score = analysis.score;
-                         analysis.review_status = 'approved'; analysis.score = 100; analysis.is_risk = false;
-                    } 
-                    else if (action === 'admin_reject') {
-                        analysis.review_status = 'rejected';
-                        if (analysis.original_score !== undefined) analysis.score = analysis.original_score;
-                    }
-                    else if (action === 'admin_reset') {
-                        analysis.review_status = null;
-                        if (analysis.original_score !== undefined) analysis.score = analysis.original_score;
-                    }
-
-                    try {
-                        const res = await fetch('/api/review', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ id: currentSession.value.id, action: action, date: currentDate.value })
-                        });
-                        if (res.ok) await loadData();
-                        else throw new Error("Server Error");
-                    } catch (e) {
-                        analysis.review_status = originalStatus;
-                        alert("操作失败");
-                    }
+                    else if (action === 'admin_approve') { analysis.review_status = 'approved'; analysis.score = 100; analysis.is_risk = false; }
+                    else if (action === 'admin_reject') { analysis.review_status = 'rejected'; }
+                    else if (action === 'admin_reset') { analysis.review_status = null; }
                 };
 
                 watch(currentSession, () => { nextTick(() => { initChart(); scrollToBottom(); }); });
@@ -376,16 +459,15 @@
 
                 onMounted(() => {
                     initApp();
-                    // 👇 修改这一行：传入 true，表示"这是静默刷新，别闪屏幕"
-                    setInterval(() => {
-                        if (currentDate.value) loadData(true); 
-                    }, 60000);
+                    setInterval(() => { if (currentDate.value) loadData(true); }, 60000);
                 });
 
                 return {
                     sessions, currentSession, isAdmin, loading, isConnected, mobileView,
-                    currentDate, availableDates, selectSession, goBack, triggerSecret, showAdminEntry,
-                    isProductCard, getProductName, getProductPrice, handleReview, loadData
+                    currentDate, filteredSessions, selectSession, goBack, triggerSecret, showAdminEntry,
+                    isProductCard, getProductName, getProductPrice, handleReview, loadData,
+                    searchQuery, onlyShowRisk, onlyShowViolations, chatExpanded, isLongChat, displayMessages,
+                    scrollToMessage, focusedMsgIndex
                 };
             }
         }).mount('#app');

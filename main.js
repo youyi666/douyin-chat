@@ -31,7 +31,7 @@ function ensureDir(dirPath) {
 
     // 2. 启动浏览器
     // headless: false 方便你观察运行情况，如果以后在服务器跑改为 true
-    const browser = await chromium.launch({ headless: true });
+    const browser = await chromium.launch({ headless: false });
     
     // 使用保存的 Cookie/LocalStorage 上下文
     const context = await browser.newContext({ storageState: config.authFile });
@@ -53,41 +53,67 @@ function ensureDir(dirPath) {
             await browser.close();
             return;
         }
-
         // ==========================================
-        // 🔥 核心修复：强力处理“AI智能客服”弹窗 🔥
+        // 🔥 核心修复：强力处理“AI智能客服”弹窗 (第一个弹窗) 🔥
         // ==========================================
         try {
-            console.log('   正在监测可能出现的弹窗 (耐心等待 10秒)...');
+            console.log('   正在监测第一个弹窗 (AI客服/定制售后)...');
             
-            // 直接定位我们要点的“放弃”按钮
-            const closeBtn = page.locator('text=放弃定制售后').first();
+            // 匹配 "暂不开启" 或 "放弃定制售后"
+            const closeBtn = page.locator('button:has-text("暂不开启")')
+                                 .or(page.locator('text=暂不开启'))
+                                 .or(page.locator('text=放弃定制售后'))
+                                 .first();
 
-            // ⚠️ 关键修改：使用 waitFor 而不是 isVisible
-            // 这会让脚本真的暂停下来等待，直到元素出现或者超时
-            await closeBtn.waitFor({ state: 'visible', timeout: 10000 });
+            // 等待弹窗出现，最多等 8秒
+            await closeBtn.waitFor({ state: 'visible', timeout: 8000 });
             
-            console.log('🚨 终于等到弹窗了！正在点击“放弃”...');
-            
-            // 强制点击，防止有透明层遮挡
+            console.log('🚨 发现第一个弹窗！正在点击“暂不开启/放弃”...');
             await closeBtn.click({ force: true });
             
-            // 点击后，必须确认它真的消失了，否则后面点日期还是会被挡
-            // 这里我们等待这个按钮从页面上消失
-            await closeBtn.waitFor({ state: 'hidden', timeout: 5000 });
-            console.log('✅ 弹窗已成功清除。');
+            // 等待按钮消失，确保点击生效
+            await closeBtn.waitFor({ state: 'hidden', timeout: 3000 });
+            console.log('✅ 第一个弹窗已清除。');
 
         } catch (e) {
-            // 如果 10秒 到了还没找到按钮，playwright 会报错跳到这里
-            // 这说明确实没有弹窗，我们可以安全地继续
-            console.log('   (10秒内未出现弹窗，自动跳过...)');
+            console.log('   (未检测到第一个弹窗或已自动跳过)');
+        }
+        // ==========================================
+        // 🔥 新增逻辑：处理第二个弹窗 (通用关闭图标) 🔥
+        // ==========================================
+        try {
+            // 给一点缓冲时间让第二个弹窗动画出来
+            await page.waitForTimeout(1000); 
+
+            console.log('   正在监测第二个弹窗 (通用通知)...');
+
+            // 根据提供的HTML: <span aria-label="close" class="anticon anticon-close auxo-modal-close-icon">
+            // 使用组合选择器确保精准定位
+            const secondCloseBtn = page.locator('.auxo-modal-close-icon')
+                                       .or(page.locator('.anticon-close'))
+                                       .or(page.locator('[aria-label="close"]'))
+                                       .first();
+
+            if (await secondCloseBtn.isVisible({ timeout: 5000 })) {
+                console.log('🚨 发现第二个弹窗！正在点击关闭图标...');
+                await secondCloseBtn.click({ force: true });
+                
+                // 确认弹窗消失
+                await secondCloseBtn.waitFor({ state: 'hidden', timeout: 3000 });
+                console.log('✅ 第二个弹窗已清除。');
+            } else {
+                console.log('   (未出现第二个弹窗)');
+            }
+
+        } catch (e) {
+            console.log('   (检测第二个弹窗时无异常或未出现)');
         }
         // ==========================================
 
         // 5. 日期循环任务 (过去7天)
         const daysToCheck = 7;
         
-        for (let i = 0; i < daysToCheck; i++) {
+        for (let i = 1; i <= daysToCheck; i++) {
             // 计算目标日期
             const targetDate = dayjs().subtract(i, 'day').format('YYYY-MM-DD');
             const filePath = path.join(config.dataDir, `${targetDate}.json`);
